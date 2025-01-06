@@ -8,15 +8,15 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 
 setuptools.setup(
-    name="scrapy-playwright",
+    name="scrapy-patchright",
     version=__version__,
     license="BSD",
-    description="Playwright integration for Scrapy",
+    description="Patchright integration for Scrapy",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Eugenio Lacuesta",
-    author_email="eugenio.lacuesta@gmail.com",
-    url="https://github.com/scrapy-plugins/scrapy-playwright",
+    author="Tom LARGE",
+    author_email="x@gmail.com",
+    url="https://github.com/tommylge/scrapy-patchright",
     packages=["scrapy_playwright"],
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -36,6 +36,6 @@ setuptools.setup(
     python_requires=">=3.8",
     install_requires=[
         "scrapy>=2.0,!=2.4.0",
-        "playwright>=1.15",
+        "patchright>=1.49.1",
     ],
 )

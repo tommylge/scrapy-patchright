@@ -1,4 +1,4 @@
-from playwright.async_api import Page
+from patchright.async_api import Page
 from scrapy import Spider, Request
 from scrapy_playwright.page import PageMethod
 
@@ -22,7 +22,9 @@ class StorageSpider(Spider):
                 "playwright": True,
                 "playwright_include_page": True,
                 "playwright_page_methods": [
-                    PageMethod("evaluate_handle", "window.localStorage.setItem('foo', 'bar');"),
+                    PageMethod(
+                        "evaluate_handle", "window.localStorage.setItem('foo', 'bar');"
+                    ),
                 ],
             },
         )

@@ -4,7 +4,7 @@ from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock
 
 import pytest
-from playwright.async_api import Error as PlaywrightError
+from patchright.async_api import Error as PlaywrightError
 from scrapy import Spider
 from scrapy.http.headers import Headers
 from scrapy.settings import Settings
@@ -41,7 +41,10 @@ class TestPageContent(IsolatedAsyncioTestCase):
         expected_content = "lorem ipsum"
         page = AsyncMock()
         page.url = "FAKE URL"
-        page.content.side_effect = [PlaywrightError(_NAVIGATION_ERROR_MSG), expected_content]
+        page.content.side_effect = [
+            PlaywrightError(_NAVIGATION_ERROR_MSG),
+            expected_content,
+        ]
         content = await _get_page_content(
             page=page,
             spider=Spider("foo"),

@@ -16,8 +16,8 @@ from unittest import IsolatedAsyncioTestCase
 
 import psutil
 import pytest
-from playwright._impl._errors import TargetClosedError
-from playwright.async_api import async_playwright
+from patchright._impl._errors import TargetClosedError
+from patchright.async_api import async_playwright
 from scrapy import Request, Spider
 
 from tests import allow_windows, make_handler, assert_correct_response
@@ -30,7 +30,11 @@ async def _run_chromium_devtools() -> Tuple[subprocess.Popen, str]:
     """
     async with async_playwright() as playwright:
         proc = subprocess.Popen(  # pylint: disable=consider-using-with
-            [playwright.chromium.executable_path, "--headless", "--remote-debugging-port=0"],
+            [
+                playwright.chromium.executable_path,
+                "--headless",
+                "--remote-debugging-port=0",
+            ],
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -56,7 +60,9 @@ def _run_chromium_browser_server() -> Tuple[subprocess.Popen, str]:
     """
     port = str(random.randint(60_000, 63_000))
     ws_path = str(uuid.uuid4())
-    launch_server_script_path = str(Path(__file__).parent.parent / "launch_chromium_server.js")
+    launch_server_script_path = str(
+        Path(__file__).parent.parent / "launch_chromium_server.js"
+    )
     command = ["node", launch_server_script_path, port, ws_path]
     proc = subprocess.Popen(command)  # pylint: disable=consider-using-with
     return proc, f"ws://localhost:{port}/{ws_path}"
@@ -99,7 +105,9 @@ class TestBrowserRemoteChromium(IsolatedAsyncioTestCase):
             }
             async with make_handler(settings_dict) as handler:
                 with StaticMockServer() as server:
-                    req = Request(server.urljoin("/index.html"), meta={"playwright": True})
+                    req = Request(
+                        server.urljoin("/index.html"), meta={"playwright": True}
+                    )
                     resp = await handler._download_request(req, Spider("foo"))
                 assert_correct_response(resp, req)
                 assert (
@@ -118,7 +126,9 @@ class TestBrowserRemoteChromium(IsolatedAsyncioTestCase):
             }
             async with make_handler(settings_dict) as handler:
                 with StaticMockServer() as server:
-                    req = Request(server.urljoin("/index.html"), meta={"playwright": True})
+                    req = Request(
+                        server.urljoin("/index.html"), meta={"playwright": True}
+                    )
                     resp = await handler._download_request(req, Spider("foo"))
                 assert_correct_response(resp, req)
                 assert (
@@ -153,7 +163,9 @@ class TestBrowserReconnectChromium(IsolatedAsyncioTestCase):
     @allow_windows
     async def test_browser_closed_restart(self):
         spider = Spider("foo")
-        async with make_handler(settings_dict={"PLAYWRIGHT_BROWSER_TYPE": "chromium"}) as handler:
+        async with make_handler(
+            settings_dict={"PLAYWRIGHT_BROWSER_TYPE": "chromium"}
+        ) as handler:
             with StaticMockServer() as server:
                 req1 = Request(
                     server.urljoin("/index.html"),
@@ -162,7 +174,9 @@ class TestBrowserReconnectChromium(IsolatedAsyncioTestCase):
                 resp1 = await handler._download_request(req1, spider)
                 page = resp1.meta["playwright_page"]
                 await page.context.browser.close()
-                req2 = Request(server.urljoin("/gallery.html"), meta={"playwright": True})
+                req2 = Request(
+                    server.urljoin("/gallery.html"), meta={"playwright": True}
+                )
                 resp2 = await handler._download_request(req2, spider)
         assert_correct_response(resp1, req1)
         assert_correct_response(resp2, req2)
@@ -193,7 +207,9 @@ class TestBrowserReconnectChromium(IsolatedAsyncioTestCase):
     )
     async def test_browser_crashed_restart(self):
         spider = Spider("foo")
-        async with make_handler(settings_dict={"PLAYWRIGHT_BROWSER_TYPE": "chromium"}) as handler:
+        async with make_handler(
+            settings_dict={"PLAYWRIGHT_BROWSER_TYPE": "chromium"}
+        ) as handler:
             with StaticMockServer() as server:
                 req1 = Request(
                     server.urljoin("/index.html"),
@@ -202,9 +218,15 @@ class TestBrowserReconnectChromium(IsolatedAsyncioTestCase):
                 resp1 = await handler._download_request(req1, spider)
                 thread = Thread(target=self.kill_chrome, daemon=True)
                 thread.start()
-                req2 = Request(server.urljoin("/gallery.html"), meta={"playwright": True})
-                req3 = Request(server.urljoin("/lorem_ipsum.html"), meta={"playwright": True})
-                req4 = Request(server.urljoin("/scroll.html"), meta={"playwright": True})
+                req2 = Request(
+                    server.urljoin("/gallery.html"), meta={"playwright": True}
+                )
+                req3 = Request(
+                    server.urljoin("/lorem_ipsum.html"), meta={"playwright": True}
+                )
+                req4 = Request(
+                    server.urljoin("/scroll.html"), meta={"playwright": True}
+                )
                 resp2 = await handler._download_request(req2, spider)
                 resp3 = await handler._download_request(req3, spider)
                 resp4 = await handler._download_request(req4, spider)
@@ -255,9 +277,15 @@ class TestBrowserReconnectChromium(IsolatedAsyncioTestCase):
                 assert_correct_response(resp1, req1)
                 thread = Thread(target=self.kill_chrome, daemon=True)
                 thread.start()
-                req2 = Request(server.urljoin("/gallery.html"), meta={"playwright": True})
-                req3 = Request(server.urljoin("/lorem_ipsum.html"), meta={"playwright": True})
-                req4 = Request(server.urljoin("/scroll.html"), meta={"playwright": True})
+                req2 = Request(
+                    server.urljoin("/gallery.html"), meta={"playwright": True}
+                )
+                req3 = Request(
+                    server.urljoin("/lorem_ipsum.html"), meta={"playwright": True}
+                )
+                req4 = Request(
+                    server.urljoin("/scroll.html"), meta={"playwright": True}
+                )
                 with pytest.raises(TargetClosedError):
                     await handler._download_request(req2, spider)
                     await handler._download_request(req3, spider)

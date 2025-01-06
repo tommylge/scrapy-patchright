@@ -6,7 +6,7 @@ from unittest import IsolatedAsyncioTestCase
 from uuid import uuid4
 
 import pytest
-from playwright.async_api import Browser, TimeoutError as PlaywrightTimeoutError
+from patchright.async_api import Browser, TimeoutError as PlaywrightTimeoutError
 from scrapy import Spider, Request
 from scrapy_playwright.page import PageMethod
 
@@ -31,7 +31,9 @@ class MixinTestCaseMultipleContexts:
                         "playwright": True,
                         "playwright_page_methods": [
                             # cause a timeout by waiting on an element that is rendered with js
-                            PageMethod("wait_for_selector", selector="div.quote", timeout=1000),
+                            PageMethod(
+                                "wait_for_selector", selector="div.quote", timeout=1000
+                            ),
                         ],
                     },
                 )
@@ -106,7 +108,9 @@ class MixinTestCaseMultipleContexts:
                     tasks.append(task)
                 await asyncio.gather(*tasks)
 
-            assert handler.stats.get_value("playwright/context_count/max_concurrent") == 4
+            assert (
+                handler.stats.get_value("playwright/context_count/max_concurrent") == 4
+            )
 
     @allow_windows
     async def test_contexts_startup(self):
@@ -191,7 +195,9 @@ class MixinTestCaseMultipleContexts:
 
     @allow_windows
     async def test_contexts_dynamic(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             assert len(handler.context_wrappers) == 0
 
             with StaticMockServer() as server:
@@ -225,14 +231,20 @@ class MixinTestCaseMultipleContexts:
             assert cookie["domain"] == "example.org"
 
 
-class TestCaseMultipleContextsChromium(IsolatedAsyncioTestCase, MixinTestCaseMultipleContexts):
+class TestCaseMultipleContextsChromium(
+    IsolatedAsyncioTestCase, MixinTestCaseMultipleContexts
+):
     browser_type = "chromium"
 
 
-class TestCaseMultipleContextsFirefox(IsolatedAsyncioTestCase, MixinTestCaseMultipleContexts):
+class TestCaseMultipleContextsFirefox(
+    IsolatedAsyncioTestCase, MixinTestCaseMultipleContexts
+):
     browser_type = "firefox"
 
 
 @pytest.mark.skipif(platform.system() != "Darwin", reason="Test WebKit only on Darwin")
-class TestCaseMultipleContextsWebkit(IsolatedAsyncioTestCase, MixinTestCaseMultipleContexts):
+class TestCaseMultipleContextsWebkit(
+    IsolatedAsyncioTestCase, MixinTestCaseMultipleContexts
+):
     browser_type = "webkit"

@@ -8,7 +8,7 @@ import pytest
 from scrapy import Spider, Request
 from scrapy.http.response.html import HtmlResponse
 
-from playwright.async_api import Page
+from patchright.async_api import Page
 from scrapy_playwright.page import PageMethod
 
 from tests import allow_windows, make_handler, assert_correct_response
@@ -43,7 +43,9 @@ class MixinPageMethodTestCase:
 
     @allow_windows
     async def test_page_non_page_method(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 req = Request(
                     url=server.urljoin("/index.html"),
@@ -68,7 +70,9 @@ class MixinPageMethodTestCase:
 
     @allow_windows
     async def test_page_mixed_page_methods(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 req = Request(
                     url=server.urljoin("/index.html"),
@@ -95,13 +99,17 @@ class MixinPageMethodTestCase:
 
     @allow_windows
     async def test_page_method_navigation(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 req = Request(
                     url=server.urljoin("/index.html"),
                     meta={
                         "playwright": True,
-                        "playwright_page_methods": [PageMethod("click", "a.lorem_ipsum")],
+                        "playwright_page_methods": [
+                            PageMethod("click", "a.lorem_ipsum")
+                        ],
                     },
                 )
                 resp = await handler._download_request(req, Spider("foo"))
@@ -117,7 +125,9 @@ class MixinPageMethodTestCase:
 
     @allow_windows
     async def test_page_method_infinite_scroll(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 req = Request(
                     url=server.urljoin("/scroll.html"),
@@ -127,13 +137,19 @@ class MixinPageMethodTestCase:
                         "playwright_page_methods": [
                             PageMethod("wait_for_selector", selector="div.quote"),
                             PageMethod(
-                                "evaluate", "window.scrollBy(0, document.body.scrollHeight)"
+                                "evaluate",
+                                "window.scrollBy(0, document.body.scrollHeight)",
                             ),
-                            PageMethod("wait_for_selector", selector="div.quote:nth-child(11)"),
                             PageMethod(
-                                "evaluate", "window.scrollBy(0, document.body.scrollHeight)"
+                                "wait_for_selector", selector="div.quote:nth-child(11)"
                             ),
-                            PageMethod("wait_for_selector", selector="div.quote:nth-child(21)"),
+                            PageMethod(
+                                "evaluate",
+                                "window.scrollBy(0, document.body.scrollHeight)",
+                            ),
+                            PageMethod(
+                                "wait_for_selector", selector="div.quote:nth-child(21)"
+                            ),
                         ],
                     },
                 )
@@ -144,7 +160,9 @@ class MixinPageMethodTestCase:
 
     @allow_windows
     async def test_page_method_screenshot(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with NamedTemporaryFile(mode="w+b", delete=False) as png_file:
                 with StaticMockServer() as server:
                     req = Request(
@@ -152,14 +170,19 @@ class MixinPageMethodTestCase:
                         meta={
                             "playwright": True,
                             "playwright_page_methods": {
-                                "png": PageMethod("screenshot", path=png_file.name, type="png"),
+                                "png": PageMethod(
+                                    "screenshot", path=png_file.name, type="png"
+                                ),
                             },
                         },
                     )
                     await handler._download_request(req, Spider("foo"))
 
                 png_file.file.seek(0)
-                assert png_file.file.read() == req.meta["playwright_page_methods"]["png"].result
+                assert (
+                    png_file.file.read()
+                    == req.meta["playwright_page_methods"]["png"].result
+                )
                 if platform.system() != "Windows":
                     assert get_mimetype(png_file) == "image/png"
 
@@ -168,7 +191,9 @@ class MixinPageMethodTestCase:
         if self.browser_type != "chromium":
             pytest.skip("PDF generation is supported only in Chromium")
 
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with NamedTemporaryFile(mode="w+b", delete=False) as pdf_file:
                 with StaticMockServer() as server:
                     req = Request(
@@ -183,13 +208,15 @@ class MixinPageMethodTestCase:
                     await handler._download_request(req, Spider("foo"))
 
                 pdf_file.file.seek(0)
-                assert pdf_file.file.read() == req.meta["playwright_page_methods"]["pdf"].result
+                assert (
+                    pdf_file.file.read()
+                    == req.meta["playwright_page_methods"]["pdf"].result
+                )
                 if platform.system() != "Windows":
                     assert get_mimetype(pdf_file) == "application/pdf"
 
     @allow_windows
     async def test_page_method_callable(self):
-
         async def scroll_page(page: Page) -> str:
             await page.wait_for_selector(selector="div.quote")
             await page.evaluate("window.scrollBy(0, document.body.scrollHeight)")
@@ -198,7 +225,9 @@ class MixinPageMethodTestCase:
             await page.wait_for_selector(selector="div.quote:nth-child(21)")
             return page.url
 
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 req = Request(
                     url=server.urljoin("/scroll.html"),

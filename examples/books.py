@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Generator, Optional
 
-from playwright.async_api import Page
+from patchright.async_api import Page
 from scrapy import Spider
 from scrapy.http.response import Response
 
@@ -32,11 +32,17 @@ class BooksSpider(Spider):
         logging.getLogger("scrapy.core.engine").setLevel(logging.WARNING)
         logging.getLogger("scrapy.core.scraper").setLevel(logging.WARNING)
 
-    def parse(self, response: Response, current_page: Optional[int] = None) -> Generator:
-        page_count = response.css(".pager .current::text").re_first(r"Page \d+ of (\d+)")
+    def parse(
+        self, response: Response, current_page: Optional[int] = None
+    ) -> Generator:
+        page_count = response.css(".pager .current::text").re_first(
+            r"Page \d+ of (\d+)"
+        )
         page_count = int(page_count)
         for page in range(2, page_count + 1):
-            yield response.follow(f"/catalogue/page-{page}.html", cb_kwargs={"current_page": page})
+            yield response.follow(
+                f"/catalogue/page-{page}.html", cb_kwargs={"current_page": page}
+            )
 
         current_page = current_page or 1
         for book in response.css("article.product_pod a"):

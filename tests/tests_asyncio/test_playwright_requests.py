@@ -7,7 +7,7 @@ from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from playwright.async_api import (
+from patchright.async_api import (
     Dialog,
     Error as PlaywrightError,
     Page as PlaywrightPage,
@@ -44,7 +44,9 @@ class MixinTestCase:
 
     @allow_windows
     async def test_basic_response(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 meta = {"playwright": True, "playwright_include_page": True}
                 req = Request(server.urljoin("/index.html"), meta=meta)
@@ -58,10 +60,14 @@ class MixinTestCase:
 
     @allow_windows
     async def test_post_request(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer() as server:
                 req = FormRequest(
-                    server.urljoin("/"), meta={"playwright": True}, formdata={"foo": "bar"}
+                    server.urljoin("/"),
+                    meta={"playwright": True},
+                    formdata={"foo": "bar"},
                 )
                 resp = await handler._download_request(req, Spider("foo"))
 
@@ -76,7 +82,9 @@ class MixinTestCase:
         }
         async with make_handler(settings_dict) as handler:
             with MockServer() as server:
-                req = Request(server.urljoin("/headers?delay=1"), meta={"playwright": True})
+                req = Request(
+                    server.urljoin("/headers?delay=1"), meta={"playwright": True}
+                )
                 with pytest.raises(PlaywrightTimeoutError) as excinfo:
                     await handler._download_request(req, Spider("foo"))
                 assert (
@@ -89,11 +97,17 @@ class MixinTestCase:
     @allow_windows
     async def test_retry_page_content_still_navigating(self):
         if self.browser_type != "chromium":
-            pytest.skip("Only Chromium seems to redirect meta tags within the same goto call")
+            pytest.skip(
+                "Only Chromium seems to redirect meta tags within the same goto call"
+            )
 
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
-                req = Request(server.urljoin("/redirect.html"), meta={"playwright": True})
+                req = Request(
+                    server.urljoin("/redirect.html"), meta={"playwright": True}
+                )
                 resp = await handler._download_request(req, Spider("foo"))
 
             assert resp.request is req
@@ -110,7 +124,9 @@ class MixinTestCase:
     @patch("scrapy_playwright.handler.logger")
     @allow_windows
     async def test_route_continue_exception(self, logger):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             scrapy_request = Request(url="https://example.org", method="GET")
             spider = Spider("foo")
             initial_request_done = asyncio.Event()
@@ -163,7 +179,9 @@ class MixinTestCase:
 
     @allow_windows
     async def test_event_handler_dialog_callable(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 spider = DialogSpider()
                 req = Request(
@@ -185,7 +203,9 @@ class MixinTestCase:
 
     @allow_windows
     async def test_event_handler_dialog_str(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 spider = DialogSpider()
                 req = Request(
@@ -207,7 +227,9 @@ class MixinTestCase:
 
     @allow_windows
     async def test_event_handler_dialog_missing(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with StaticMockServer() as server:
                 spider = DialogSpider()
                 req = Request(
@@ -231,7 +253,9 @@ class MixinTestCase:
 
     @allow_windows
     async def test_response_attributes(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer() as server:
                 req = Request(
                     url=server.urljoin(),
@@ -244,8 +268,12 @@ class MixinTestCase:
     @allow_windows
     async def test_page_goto_kwargs_referer(self):
         if self.browser_type != "chromium":
-            pytest.skip("referer as goto kwarg seems to work only with chromium :shrug:")
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+            pytest.skip(
+                "referer as goto kwarg seems to work only with chromium :shrug:"
+            )
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer() as server:
                 fake_referer = server.urljoin("/fake/referer")
                 req = Request(
@@ -262,7 +290,9 @@ class MixinTestCase:
 
     @allow_windows
     async def test_navigation_returns_none(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer():
                 req = Request(url="about:blank", meta={"playwright": True})
                 response = await handler._download_request(req, Spider("spider_name"))
@@ -303,10 +333,22 @@ class MixinTestCase:
 
                     req_prefix = "playwright/request_count"
                     resp_prefix = "playwright/response_count"
-                    assert handler.stats.get_value(f"{req_prefix}/resource_type/document") == 1
-                    assert handler.stats.get_value(f"{req_prefix}/resource_type/image") == 3
-                    assert handler.stats.get_value(f"{resp_prefix}/resource_type/document") == 1
-                    assert handler.stats.get_value(f"{resp_prefix}/resource_type/image") is None
+                    assert (
+                        handler.stats.get_value(f"{req_prefix}/resource_type/document")
+                        == 1
+                    )
+                    assert (
+                        handler.stats.get_value(f"{req_prefix}/resource_type/image")
+                        == 3
+                    )
+                    assert (
+                        handler.stats.get_value(f"{resp_prefix}/resource_type/document")
+                        == 1
+                    )
+                    assert (
+                        handler.stats.get_value(f"{resp_prefix}/resource_type/image")
+                        is None
+                    )
                     assert handler.stats.get_value(f"{req_prefix}/aborted") == 3
 
     @allow_windows
@@ -322,7 +364,10 @@ class MixinTestCase:
             with MockServer() as server:
                 req = Request(
                     url=server.urljoin("/headers"),
-                    meta={"playwright": True, "playwright_page_init_callback": init_page},
+                    meta={
+                        "playwright": True,
+                        "playwright_page_init_callback": init_page,
+                    },
                 )
                 response = await handler._download_request(req, Spider("spider_name"))
         assert response.status == 200
@@ -343,7 +388,10 @@ class MixinTestCase:
             with MockServer() as server:
                 req = Request(
                     url=server.urljoin("/headers"),
-                    meta={"playwright": True, "playwright_page_init_callback": init_page},
+                    meta={
+                        "playwright": True,
+                        "playwright_page_init_callback": init_page,
+                    },
                 )
                 response = await handler._download_request(req, Spider("spider_name"))
         assert response.status == 200
@@ -354,12 +402,20 @@ class MixinTestCase:
             if "Page init callback exception for" in entry[2]:
                 assert entry[0] == "scrapy-playwright"
                 assert entry[1] == logging.WARNING
-                assert f"[Context=default] Page init callback exception for {req!r}" in entry[2]
-                assert "init_page() missing 1 required positional argument: '_missing'" in entry[2]
+                assert (
+                    f"[Context=default] Page init callback exception for {req!r}"
+                    in entry[2]
+                )
+                assert (
+                    "init_page() missing 1 required positional argument: '_missing'"
+                    in entry[2]
+                )
 
     @allow_windows
     async def test_redirect(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer() as server:
                 req = Request(
                     url=server.urljoin("/redirect2"),
@@ -381,12 +437,18 @@ class MixinTestCase:
         (records sent before opening the spider will not have it).
         """
         spider = Spider("spider_name")
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer() as server:
-                req = Request(url=server.urljoin("/index.html"), meta={"playwright": True})
+                req = Request(
+                    url=server.urljoin("/index.html"), meta={"playwright": True}
+                )
                 await handler._download_request(req, spider)
 
-        assert any(getattr(rec, "spider", None) is spider for rec in self._caplog.records)
+        assert any(
+            getattr(rec, "spider", None) is spider for rec in self._caplog.records
+        )
 
     @allow_windows
     async def test_download_file_ok(self):
@@ -451,7 +513,9 @@ class MixinTestCase:
         async def cancel_download(download):
             await download.cancel()
 
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer() as server:
                 request = Request(
                     url=server.urljoin("/mancha.pdf?content_length_multiplier=1000"),
@@ -471,7 +535,9 @@ class MixinTestCase:
 
     @allow_windows
     async def test_fail_status_204(self):
-        async with make_handler({"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}) as handler:
+        async with make_handler(
+            {"PLAYWRIGHT_BROWSER_TYPE": self.browser_type}
+        ) as handler:
             with MockServer() as server:
                 request = Request(
                     url=server.urljoin("/status/204"),
